@@ -1,0 +1,44 @@
+version: '2.2'
+
+services:
+  anagram-redis:
+    container_name: anagram-redis
+    image: redis:4.0-alpine
+    restart: unless-stopped
+    command:
+      - 'redis-server'
+      - '--databases 1'
+      - '--save 900 1'
+      - '--save 300 10'
+      - '--save 60 10000'
+    volumes:
+      - ./data/redis:/data
+    ports:
+      - 7079:6379
+    networks:
+      anagram_net:
+        ipv4_address: 192.168.78.78
+
+  anagram-app:
+    container_name: anagram
+    image: img-anagrams
+    restart: unless-stopped
+    environment:
+      LOGLVL: INFO
+      REDIS: 192.168.78.78:6379
+      PORT: 8080
+    volumes:
+      - ./logs:/logs
+    depends_on:
+      - anagram-redis
+    ports:
+      - 127.0.0.1:8080:8080
+    networks:
+      anagram_net:
+        ipv4_address: 192.168.78.80
+
+networks:
+  anagram_net:
+    ipam:
+      config:
+        - subnet: 192.168.78.0/24
